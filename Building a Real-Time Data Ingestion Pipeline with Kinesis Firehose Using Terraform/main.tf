@@ -1,4 +1,3 @@
-
 resource "aws_s3_bucket" "stream_bucket" {
   bucket = var.KKE_S3_BUCKET_NAME
 }
@@ -12,14 +11,15 @@ resource "aws_iam_role" "firehose_role" {
     Statement = [{
       Action = "sts:AssumeRole"
       Effect = "Allow"
-      Principal = { Service = "firehose.amazonaws.com" }
+      Principal = {
+        Service = "firehose.amazonaws.com"
+      }
     }]
   })
 }
 
-
 resource "aws_iam_role_policy" "firehose_s3_policy" {
-  name = "firehose-s3-access"
+  name = "firehose-s3-access-policy"
   role = aws_iam_role.firehose_role.id
 
   policy = jsonencode({
@@ -35,6 +35,7 @@ resource "aws_iam_role_policy" "firehose_s3_policy" {
   })
 }
 
+# 4. إنشاء الـ Firehose Delivery Stream
 resource "aws_kinesis_firehose_delivery_stream" "nautilus_stream" {
   name        = var.KKE_FIREHOSE_STREAM_NAME
   destination = "extended_s3"
@@ -44,8 +45,10 @@ resource "aws_kinesis_firehose_delivery_stream" "nautilus_stream" {
     bucket_arn = aws_s3_bucket.stream_bucket.arn
     
 
-    buffer_size     = 5
-    buffer_interval = 300
+    buffering_configuration {
+      size     = 5
+      interval = 300
+    }
 
 
     processing_configuration {
@@ -54,7 +57,7 @@ resource "aws_kinesis_firehose_delivery_stream" "nautilus_stream" {
         type = "AppendDelimiterToRecord"
         parameters {
           parameter_name  = "Delimiter"
-          parameter_value = "\\n"
+          parameter_value = "\\n" 
         }
       }
     }
