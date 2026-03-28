@@ -2,7 +2,7 @@ The Nautilus DevOps team needs to securely manage sensitive information using AW
 
 Requirements:
 
-Create an AWS Secrets Manager secret named datacenter-db-password.
+Create an AWS Secrets Manager secret named xfusion-db-password.
 
 Store the database password SuperSecretPassword123! in the secret using Terraform.
 
@@ -30,4 +30,4 @@ The Terraform working directory is /home/bob/terraform.
 
 Right-click under the EXPLORER section in VS Code and select Open in Integrated Terminal to launch the terminal.
 
-Before submitting the task, ensure that terraform plan returns No changes. Your infrastructure matches the configuration.
+Before submitting the task, ensure that terraform plan returns
