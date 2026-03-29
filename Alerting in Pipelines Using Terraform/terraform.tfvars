@@ -1,0 +1,7 @@
+KKE_STAGING_BUCKET_NAME    = "xfusion-staging-13276"
+KKE_FIREHOSE_ROLE_NAME     = "xfusion-firehose-role"
+KKE_FIREHOSE_POLICY_NAME   = "xfusion-firehose-policy"
+KKE_FIREHOSE_NAME          = "xfusion-firehose"
+KKE_SNS_TOPIC_NAME         = "xfusion-alert-topic"
+KKE_CLOUDWATCH_ALARM_NAME  = "xfusion-firehose-failures"
+KKE_ALERT_EMAIL            = "xfusion@example.com"
