@@ -1,0 +1,110 @@
+# Module: modules/network/variables.tf
+
+variable "KKE_NAME_PREFIX" {
+  description = "Name prefix to use for network resources"
+  type        = string
+}
+
+variable "KKE_VPC_CIDR" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "KKE_TAGS" {
+  description = "Common tags map for network resources"
+  type        = map(string)
+}
+
+
+ # Network Module: modules/network/main.tf
+
+resource "aws_vpc" "kke_vpc" {
+  cidr_block = var.KKE_VPC_CIDR
+
+  tags = merge(var.KKE_TAGS, {
+    Name = "${var.KKE_NAME_PREFIX}-vpc"
+  })
+}
+
+resource "aws_subnet" "kke_subnet" {
+  vpc_id                  = aws_vpc.kke_vpc.id
+  cidr_block              = cidrsubnet(var.KKE_VPC_CIDR, 8, 1)  # e.g., 10.0.1.0/24
+  availability_zone       = "us-east-1a"  # Adjust AZ as needed
+  map_public_ip_on_launch = true
+
+  tags = merge(var.KKE_TAGS, {
+    Name = "${var.KKE_NAME_PREFIX}-subnet"
+  })
+}
+
+
+# Network Module: modules/network/outputs.tf
+
+output "kke_vpc_name" {
+  description = "Name of the created VPC"
+  value       = aws_vpc.kke_vpc.tags["Name"]
+}
+
+output "kke_subnet_name" {
+  description = "Name of the created Subnet"
+  value       = aws_subnet.kke_subnet.tags["Name"]
+}
+
+output "kke_subnet_id" {
+  description = "ID of the created Subnet (needed by compute module)"
+  value       = aws_subnet.kke_subnet.id
+}
+
+###########################################################################################################
+# Compute Module: modules/compute/variables.tf
+variable "KKE_NAME_PREFIX" {
+  description = "Name prefix to use for compute resources"
+  type        = string
+}
+
+variable "KKE_SUBNET_ID" {
+  description = "Subnet ID where the instance will be created"
+  type        = string
+}
+
+variable "KKE_INSTANCE_TYPE" {
+  description = "EC2 instance type"
+  type        = string
+}
+
+variable "KKE_TAGS" {
+  description = "Common tags map for compute resources"
+  type        = map(string)
+}
+#Compute Module: modules/compute/main.tf
+
+resource "aws_instance" "kke_instance" {
+  ami           = "ami-0c94855ba95c71c99"  # Amazon Linux 2 AMI (as specified)
+  instance_type = var.KKE_INSTANCE_TYPE
+  subnet_id     = var.KKE_SUBNET_ID
+
+  tags = merge(var.KKE_TAGS, {
+    Name = "${var.KKE_NAME_PREFIX}-instance"
+  })
+}
+
+
+#Compute Module: modules/compute/outputs.tf
+output "kke_instance_name" {
+  description = "Name of the created EC2 instance"
+  value       = aws_instance.kke_instance.tags["Name"]
+}
+How to Use (in VS Code Integrated Terminal)
+
+Navigate to the working directory:Bashcd /home/bob/terraform
+```
+Initialize Terraform:Bashterraform init
+```
+For dev workspace:Bashterraform workspace new dev
+```
+terraform apply -var-file=dev.tfvars
+```
+For prod workspace:Bashterraform workspace new prod
+```
+terraform apply -var-file=prod.tfvars
+```
