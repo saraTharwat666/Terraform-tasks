@@ -1,0 +1,81 @@
+# 1. Root variables.tf
+
+variable "KKE_VPC_CIDR" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "KKE_INSTANCE_TYPE" {
+  description = "EC2 instance type"
+  type        = string
+
+  validation {
+    condition     = contains(["t3.micro", "t3.large"], var.KKE_INSTANCE_TYPE)
+    error_message = "KKE_INSTANCE_TYPE must be either t3.micro or t3.large."
+  }
+}
+
+
+# 2. Root main.tf
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"  # Adjust region as needed for your environment
+}
+
+locals {
+  name_prefix = "datacenter-${terraform.workspace}"
+  common_tags = {
+    Project     = "datacenter"
+    Environment = terraform.workspace
+  }
+}
+
+module "network" {
+  source = "./modules/network"
+
+  KKE_NAME_PREFIX = local.name_prefix
+  KKE_VPC_CIDR    = var.KKE_VPC_CIDR
+  KKE_TAGS        = local.common_tags
+}
+
+module "compute" {
+  source = "./modules/compute"
+
+  KKE_NAME_PREFIX   = local.name_prefix
+  KKE_SUBNET_ID     = module.network.kke_subnet_id  # Pass subnet ID from network module
+  KKE_INSTANCE_TYPE = var.KKE_INSTANCE_TYPE
+  KKE_TAGS          = local.common_tags
+}
+
+
+# 3. Root outputs.tf
+output "kke_vpc_name" {
+  description = "Name of the created VPC"
+  value       = module.network.kke_vpc_name
+}
+
+output "kke_subnet_name" {
+  description = "Name of the created Subnet"
+  value       = module.network.kke_subnet_name
+}
+
+output "kke_instance_name" {
+  description = "Name of the created EC2 instance"
+  value       = module.compute.kke_instance_name
+}
+
+# 4. dev.tfvars
+hclKKE_INSTANCE_TYPE = "t3.micro"
+
+
+# 5. prod.tfvars
+KKE_INSTANCE_TYPE = "t3.large"
